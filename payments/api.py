@@ -1,9 +1,11 @@
 import frappe
 from frappe.utils import nowdate
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+from frappe.auth import LoginManager
 
 
 @frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def accept_payment(**data):
     """
     headers: X-CALLBACK-TOKEN
@@ -29,6 +31,8 @@ def accept_payment(**data):
         "payment_destination": "8860827838227"
     }
     """
+    login_manager = LoginManager()
+    login_manager.authenticate("Administrator","admin")
 
     data = frappe.parse_json(data)
     payment_log = frappe.get_list("Xendit Payment Log", filters={"document": data['external_id']}, fields=["name"])
