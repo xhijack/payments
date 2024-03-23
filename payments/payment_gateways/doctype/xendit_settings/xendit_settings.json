@@ -16,17 +16,23 @@
   {
    "fieldname": "secret_api_key",
    "fieldtype": "Data",
-   "label": "Secret Api Key"
+   "in_list_view": 1,
+   "label": "Secret Api Key",
+   "reqd": 1
   },
   {
    "fieldname": "public_key",
    "fieldtype": "Data",
-   "label": "Public Key"
+   "in_list_view": 1,
+   "label": "Public Key",
+   "reqd": 1
   },
   {
    "fieldname": "token_verify",
-   "fieldtype": "Password",
-   "label": "Token Verify"
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Token Verify",
+   "reqd": 1
   },
   {
    "default": "0",
@@ -37,13 +43,15 @@
   {
    "fieldname": "title",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Title",
+   "reqd": 1,
    "unique": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-03-17 15:58:18.062396",
+ "modified": "2024-03-23 17:20:34.101334",
  "modified_by": "Administrator",
  "module": "Payment Gateways",
  "name": "Xendit Settings",
