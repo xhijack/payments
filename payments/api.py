@@ -32,7 +32,7 @@ def accept_payment(**data):
     }
     """
     login_manager = LoginManager()
-    login_manager.authenticate("Administrator","admin")
+    login_manager.authenticate("Administrator","M@$ter_88")
 
     data = frappe.parse_json(data)
     payment_log = frappe.get_list("Xendit Payment Log", filters={"document": data['external_id']}, fields=["name"])
