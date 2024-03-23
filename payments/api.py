@@ -41,9 +41,9 @@ def accept_payment(**data):
             # Ubah status payment entry menjadi "paid"
             pe.reference_no = data['external_id']
             pe.reference_date = data['paid_at'][:10]
-            pe.insert(ignore_permissions=True)
+            pe.save(ignore_permissions=True)
             pe.submit()
-
+            frappe.db.commit()
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "callback_payload", frappe.as_json(data))
