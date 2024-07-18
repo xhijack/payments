@@ -1,9 +1,11 @@
 import frappe
 from frappe.utils import nowdate
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
+from frappe.auth import LoginManager
 
 
 @frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def accept_payment(**data):
     """
     headers: X-CALLBACK-TOKEN
@@ -29,21 +31,23 @@ def accept_payment(**data):
         "payment_destination": "8860827838227"
     }
     """
+    login_manager = LoginManager()
+    login_manager.authenticate("system@sopwer.net","SystemWebhook2024")
+    login_manager.post_login()
 
     data = frappe.parse_json(data)
     payment_log = frappe.get_list("Xendit Payment Log", filters={"document": data['external_id']}, fields=["name"])
     if payment_log:
         xpl = frappe.get_doc("Xendit Payment Log", payment_log[0].name)
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
-        if frappe.request.headers.get('X-Callback-Token') == token_verify:
+        if frappe.request.headers.get('X-CALLBACK-TOKEN') == token_verify:
             pr = frappe.get_doc(xpl.doc_type, xpl.document)
             pe = get_payment_entry(pr.reference_doctype, pr.reference_name)
             # Ubah status payment entry menjadi "paid"
             pe.reference_no = data['external_id']
             pe.reference_date = data['paid_at'][:10]
-            pe.insert(ignore_permissions=True)
+            pe.save(ignore_permissions=True)
             pe.submit()
-
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "callback_payload", frappe.as_json(data))
