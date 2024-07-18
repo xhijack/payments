@@ -117,8 +117,8 @@ def create_multiple_invoice(bulk_payment_request):
             'allocated_amount': float(si.amount),
             'payment_term': si.payment_term
         })
-        pe.paid_amount += float(si_doc.outstanding_amount)
-        pe.received_amount += float(si_doc.outstanding_amount)
+        pe.paid_amount = float(si.amount)
+        pe.received_amount = float(si.amount)
 
         pe.set_missing_values()
         pe.save()
