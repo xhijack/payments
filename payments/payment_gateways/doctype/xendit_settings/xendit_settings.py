@@ -66,8 +66,6 @@ class XenditSettings(Document):
 		try:
 			# Create an invoice
 			api_response = api_instance.create_invoice(create_invoice_request)
-			# import pdb
-			# pdb.set_trace()
 			xpl = frappe.new_doc("Xendit Payment Log")
 			xpl.xendit_account = self.name
 			xpl.respond_payload = json.dumps(api_response.to_dict(), default=serialize_datetime, indent=4)  #json.dumps(api_response.to_dict())

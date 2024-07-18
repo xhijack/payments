@@ -63,6 +63,43 @@ def accept_payment(**data):
         return "Payment log not found"
     
 
+def get_combined_payment_entry(bulk_payment_request):
+	bpr = frappe.get_doc('Bulk Payment Request', bulk_payment_request)
+	si_names = [invoice.sales_invoice for invoice in bpr.invoices]
+	if not isinstance(si_names, list):
+		si_names = [si_names]
+
+	first_si = si_names[0]
+	pe = get_payment_entry('Sales Invoice', first_si)
+	pe.reference_no = bpr.name
+	pe.reference_date = nowdate()
+	pe.mode_of_payment = bpr.mode_of_payment
+	pe.flags.ignore_mandatory = True
+	pe.references = []
+	for si in bpr.invoices:
+		si_doc = frappe.get_doc('Sales Invoice', si.sales_invoice)
+		if not pe.references:
+			pe.references = []
+		pe.append('references', {
+			'reference_doctype': 'Sales Invoice',
+			'reference_name': si.sales_invoice,
+			'total_amount': float(si_doc.grand_total),
+			'outstanding_amount': float(si_doc.outstanding_amount),
+			'allocated_amount': float(si.amount),
+			'payment_term': si.payment_term
+		})
+		pe.paid_amount += float(si_doc.outstanding_amount)
+		pe.received_amount += float(si_doc.outstanding_amount)
+
+	pe.set_missing_values()
+	pe.save()
+	pe.submit()
+
+	frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Paid')
+
+	return pe.name
+
+
 @frappe.whitelist(allow_guest=True)
 def accept_payment_multi_invoice(**data):
     """
@@ -96,13 +133,8 @@ def accept_payment_multi_invoice(**data):
         xpl = frappe.get_doc("Xendit Payment Log", payment_log[0].name)
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
         if frappe.request.headers.get('X-Callback-Token') == token_verify:
-            pr = frappe.get_doc(xpl.doc_type, xpl.document)
-            pe = get_payment_entry(pr.reference_doctype, pr.reference_name)
-            # Ubah status payment entry menjadi "paid"
-            pe.reference_no = data['external_id']
-            pe.reference_date = data['paid_at'][:10]
-            pe.insert(ignore_permissions=True)
-            pe.submit()
+            
+            get_combined_payment_entry(xpl.document)
 
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
