@@ -165,6 +165,8 @@ def accept_payment_multi_invoice(**data):
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "callback_payload", frappe.as_json(data))
+            frappe.db.set_value('Bulk Payment Request', xpl.document, 'status', 'Paid')
+
             frappe.db.commit()
 
             return "Payment entry updated successfully"
