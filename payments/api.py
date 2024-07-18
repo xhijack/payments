@@ -99,6 +99,32 @@ def get_combined_payment_entry(bulk_payment_request):
 
 	return pe.name
 
+def create_multiple_invoice(bulk_payment_request):
+    bpr = frappe.get_doc('Bulk Payment Request', bulk_payment_request)
+    for si in bpr.invoices:
+        si_doc = frappe.get_doc('Sales Invoice', si.sales_invoice)
+        pe = get_payment_entry('Sales Invoice', si.sales_invoice)
+        pe.reference_no = bpr.name
+        pe.reference_date = nowdate()
+        pe.mode_of_payment = bpr.mode_of_payment
+        pe.flags.ignore_mandatory = True
+        pe.references = []
+        pe.append('references', {
+            'reference_doctype': 'Sales Invoice',
+            'reference_name': si.sales_invoice,
+            'total_amount': float(si_doc.grand_total),
+            'outstanding_amount': float(si_doc.outstanding_amount),
+            'allocated_amount': float(si.amount),
+            'payment_term': si.payment_term
+        })
+        pe.paid_amount += float(si_doc.outstanding_amount)
+        pe.received_amount += float(si_doc.outstanding_amount)
+
+        pe.set_missing_values()
+        pe.save()
+        pe.submit()
+                            
+
 
 @frappe.whitelist(allow_guest=True)
 def accept_payment_multi_invoice(**data):
@@ -134,7 +160,7 @@ def accept_payment_multi_invoice(**data):
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
         if frappe.request.headers.get('X-Callback-Token') == token_verify:
             
-            get_combined_payment_entry(xpl.document)
+            create_multiple_invoice(xpl.document)
 
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
