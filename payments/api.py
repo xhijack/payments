@@ -42,7 +42,7 @@ def accept_payment(**data):
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
         if frappe.request.headers.get('X-CALLBACK-TOKEN') == token_verify:
             pr = frappe.get_doc(xpl.doc_type, xpl.document)
-            pe = get_payment_entry(pr.reference_doctype, pr.reference_name)
+            pe = get_payment_entry(pr.reference_doctype, pr.reference_name, party_type=pr.party_type)
             # Ubah status payment entry menjadi "paid"
             pe.reference_no = data['external_id']
             pe.reference_date = data['paid_at'][:10]
