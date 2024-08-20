@@ -44,6 +44,8 @@ def accept_payment(**data):
             pr = frappe.get_doc(xpl.doc_type, xpl.document)
             if pr.payment_type == "Inward":
                  payment_type = "Receive"
+            else:
+                payment_type = "Pay"
             pe = get_payment_entry(dt=pr.reference_doctype, dn=pr.reference_name, party_type=pr.party_type, payment_type=payment_type)
 
             # Ubah status payment entry menjadi "paid"
