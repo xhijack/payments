@@ -42,7 +42,7 @@ def accept_payment(**data):
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
         if frappe.request.headers.get('X-CALLBACK-TOKEN') == token_verify:
             pr = frappe.get_doc(xpl.doc_type, xpl.document)
-            if pr.payment_type == "Inward":
+            if pr.payment_request_type == "Inward":
                  payment_type = "Receive"
             else:
                 payment_type = "Pay"
