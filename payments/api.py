@@ -107,6 +107,7 @@ def get_combined_payment_entry(bulk_payment_request):
 def create_multiple_invoice(bulk_payment_request):
     bpr = frappe.get_doc('Bulk Payment Request', bulk_payment_request)
     for si in bpr.invoices:
+        
         si_doc = frappe.get_doc('Sales Invoice', si.sales_invoice)
         pe = get_payment_entry('Sales Invoice', si.sales_invoice)
         pe.reference_no = bpr.name
@@ -126,9 +127,12 @@ def create_multiple_invoice(bulk_payment_request):
         pe.received_amount = float(si.amount)
 
         pe.set_missing_values()
-        pe.save()
-        pe.submit()
-                            
+        try:
+            pe.save()
+            pe.submit()
+        except frappe.ValidationError as e:
+            print("Paid Error: ", e)
+        return "success"                            
 
 
 @frappe.whitelist(allow_guest=True)
