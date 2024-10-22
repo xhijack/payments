@@ -186,3 +186,74 @@ def accept_payment_multi_invoice(**data):
     else:
         frappe.log_error("Error Payment {0} Log Not Found".format(data['id']))
         return "Payment log not found"
+    
+
+@frappe.whitelist(allow_guest=True) 
+def accept_order_payment_request(**data):
+    """
+    headers: X-CALLBACK-TOKEN
+    data: {
+        "id": "65f675eec32d920fd76d8034",
+        "amount": 500000,
+        "status": "PAID",
+        "created": "2024-03-17T04:47:43.048Z",
+        "is_high": false,
+        "paid_at": "2024-03-17T04:48:32.000Z",
+        "updated": "2024-03-17T04:48:33.041Z",
+        "user_id": "65e0a60d213e0478ced4bb3e",
+        "currency": "IDR",
+        "bank_code": "MANDIRI",
+        "payment_id": "46913fa1-3351-47c2-aa55-3b0fde81ee36",
+        "description": "Invoice Demo #123",
+        "external_id": "invoice-1231241",
+        "paid_amount": 500000,
+        "payer_email": "ramdani@sopwer.net",
+        "merchant_name": "Sopwer",
+        "payment_method": "BANK_TRANSFER",
+        "payment_channel": "MANDIRI",
+        "payment_destination": "8860827838227"
+    }
+    """
+    login_manager = LoginManager()
+    login_manager.authenticate("system@sopwer.net","SystemWebhook2024")
+    login_manager.post_login()
+
+    data = frappe.parse_json(data)
+    payment_log = frappe.get_list("Xendit Payment Log", filters={"document": data['external_id']}, fields=["name"])
+    if payment_log:
+        xpl = frappe.get_doc("Xendit Payment Log", payment_log[0].name)
+        token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
+        if frappe.request.headers.get('X-CALLBACK-TOKEN') == token_verify:
+            order_setting = frappe.get_doc("Order Settings")
+            pr = frappe.get_doc(xpl.doc_type, xpl.document)
+            payment_entry = frappe.new_doc("Payment Entry")
+            payment_entry.payment_type = "Receive"
+            payment_entry.party_type = "Customer"
+            payment_entry.posting_date = nowdate()
+            payment_entry.party = pr.customer
+            payment_entry.mode_of_payment = pr.mode_of_payment
+            payment_entry.paid_amount = data['paid_amount']
+            payment_entry.received_amount = data['paid_amount']
+            payment_entry.target_exchange_rate = 1
+            payment_entry.paid_to = order_setting.account_paid_to
+            payment_entry.paid_from = order_setting.account_receivable
+            payment_entry.order_reference = pr.reference_name
+            payment_entry.reference_no = data['external_id']
+            payment_entry.reference_date = data['paid_at'][:10]
+            payment_entry.save(ignore_permissions=True)
+            payment_entry.submit()
+
+            # Update Xendit Payment Log
+            frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
+            frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "callback_payload", frappe.as_json(data))
+            frappe.db.commit()
+
+            return "Payment entry updated successfully"
+        else:
+            frappe.log_error("Request Payment {0} Is Invalid".format(data['id']))
+            return "Request Payment {0} Is Invalid".format(data['id'])
+
+    else:
+        frappe.log_error("Error Payment {0} Log Not Found".format(data['id']))
+        return "Payment log not found"
+    
