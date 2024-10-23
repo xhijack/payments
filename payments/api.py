@@ -132,7 +132,7 @@ def create_multiple_invoice(bulk_payment_request):
             pe.submit()
         except frappe.ValidationError as e:
             print("Paid Error: ", e)
-        return "success"                            
+    return "success"                            
 
 
 @frappe.whitelist(allow_guest=True)
