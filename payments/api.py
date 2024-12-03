@@ -3,7 +3,6 @@ from frappe.utils import nowdate
 from erpnext.accounts.doctype.payment_entry.payment_entry import get_payment_entry
 from frappe.auth import LoginManager
 
-
 @frappe.whitelist(allow_guest=True)
 @frappe.whitelist()
 def accept_payment(**data):
