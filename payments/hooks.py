@@ -126,7 +126,8 @@ before_tests = "erpnext.setup.utils.before_tests"  # To setup company and accoun
 # ------------------------------
 #
 override_whitelisted_methods = {
-	"frappe.website.doctype.web_form.web_form.accept": "payments.overrides.payment_webform.accept"
+	"frappe.website.doctype.web_form.web_form.accept": "payments.overrides.payment_webform.accept",
+    "frappe.accounts.doctype.payment_request.payment_request.resend_payment_email": "payments.overrides.payment_request.resend_payment_email",
 }
 #
 # each overriding function accepts a `data` argument;
