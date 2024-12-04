@@ -9,7 +9,7 @@ app_license = "MIT"
 
 # Includes in <head>
 # ------------------
-app_include = ["payments.custom_payment_request"]
+# app_include = ["payments.custom_payment_request"]
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/pay/css/pay.css"
