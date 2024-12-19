@@ -169,7 +169,9 @@ def accept_payment_multi_invoice(**data):
         token_verify = frappe.db.get_value("Xendit Settings", xpl.xendit_account, "token_verify")
         if frappe.request.headers.get('X-Callback-Token') == token_verify:
             
-            create_multiple_invoice(xpl.document)
+            # Enqueue the function
+            frappe.enqueue('payments.api.enqueue_create_multiple_invoice', document=xpl.document)
+            # create_multiple_invoice(xpl.document)
 
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
@@ -187,6 +189,8 @@ def accept_payment_multi_invoice(**data):
         frappe.log_error("Error Payment {0} Log Not Found".format(data['id']))
         return "Payment log not found"
     
+def enqueue_create_multiple_invoice(document):
+    create_multiple_invoice(document)
 
 @frappe.whitelist(allow_guest=True) 
 def accept_order_payment_request(**data):
