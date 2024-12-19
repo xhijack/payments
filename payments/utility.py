@@ -11,11 +11,13 @@ def bulk_payment_expire():
         "creation": ["<", one_day_ago]
     })
 
-    # Batalkan dokumen
+    # Enqueue pembatalan dokumen
     for payment in bulk_payments:
-        doc = frappe.get_doc("Bulk Payment Request", payment.name)
-        doc.cancel()
-        frappe.db.commit()
+        frappe.enqueue(cancel_bulk_payment, payment_name=payment.name)
 
-    frappe.msgprint(f"{len(bulk_payments)} Bulk Payment Requests have been cancelled.")
-    # Tambahkan logika lain yang ingin dijalankan di sini
+    frappe.msgprint(f"{len(bulk_payments)} Bulk Payment Requests have been enqueued for cancellation.")
+
+def cancel_bulk_payment(payment_name):
+    doc = frappe.get_doc("Bulk Payment Request", payment_name)
+    doc.cancel()
+    frappe.db.commit()
