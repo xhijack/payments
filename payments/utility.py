@@ -19,5 +19,13 @@ def bulk_payment_expire():
 
 def cancel_bulk_payment(payment_name):
     doc = frappe.get_doc("Bulk Payment Request", payment_name)
+    
+    # Periksa dan batalkan dokumen yang ditautkan
+    linked_docs = frappe.get_all("Xendit Payment Log", filters={"bulk_payment_request": payment_name})
+    for linked_doc in linked_docs:
+        linked_doc = frappe.get_doc("Xendit Payment Log", linked_doc.name)
+        linked_doc.cancel()
+    
+    # Batalkan dokumen Bulk Payment Request
     doc.cancel()
     frappe.db.commit()
