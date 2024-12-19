@@ -119,6 +119,9 @@ scheduler_events = {
     "cron": {
         "* * * * *": [
             "frappe.email.queue.flush"
+        ],
+         "0 17 * * *": [
+            "payments.utility.bulk_payment_expire"
         ]
     }
 }
