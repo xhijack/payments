@@ -11,12 +11,11 @@ def bulk_payment_expire():
         "creation": ["<", one_day_ago]
     })
 
-    # Update status ke 'Cancelled'
+    # Batalkan dokumen
     for payment in bulk_payments:
         doc = frappe.get_doc("Bulk Payment Request", payment.name)
-        doc.status = "Cancelled"
-        doc.save()
+        doc.cancel()
         frappe.db.commit()
 
-    frappe.msgprint(f"{len(bulk_payments)} Bulk Payment Requests have been updated to 'Cancelled'.")
+    frappe.msgprint(f"{len(bulk_payments)} Bulk Payment Requests have been cancelled.")
     # Tambahkan logika lain yang ingin dijalankan di sini
