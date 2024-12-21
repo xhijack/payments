@@ -106,6 +106,8 @@ def get_combined_payment_entry(bulk_payment_request):
 
 def create_multiple_invoice(bulk_payment_request):
     bpr = frappe.get_doc('Bulk Payment Request', bulk_payment_request)
+
+    payment_alocation = 0
     for si in bpr.invoices:
         
         si_doc = frappe.get_doc('Sales Invoice', si.sales_invoice)
@@ -130,8 +132,20 @@ def create_multiple_invoice(bulk_payment_request):
         try:
             pe.save()
             pe.submit()
+            payment_alocation += float(si.amount)
         except frappe.ValidationError as e:
-            print("Paid Error: ", e)
+            frappe.log_error(f"Paid Error: {str(e)}", "Payment Entry Error")
+    
+    try:
+        if payment_alocation != bpr.total_amount:
+            frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Overpaid')
+            frappe.db.set_value('Bulk Payment Request', bpr.name, 'overpaid_amount', bpr.total_amount - payment_alocation)
+            frappe.db.set_value('Bulk Payment Request', bpr.name, 'payment_alocation', payment_alocation)
+            frappe.db.commit()
+
+    except frappe.ValidationError as e:
+        frappe.log_error(f"Paid Error: {str(e)}", "Bulk Payment Request Error")
+
     return "success"                            
 
 
@@ -260,4 +274,3 @@ def accept_order_payment_request(**data):
     else:
         frappe.log_error("Error Payment {0} Log Not Found".format(data['id']))
         return "Payment log not found"
-    
