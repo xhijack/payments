@@ -8,6 +8,7 @@ def bulk_payment_expire():
     one_day_ago = add_days(now_datetime(), -1)
     bulk_payments = frappe.get_all("Bulk Payment Request", filters={
         "status": "Initiated",
+        "docstatus": ["!=", 2],  # Exclude cancelled documents
         "creation": ["<", one_day_ago]
     })
 
