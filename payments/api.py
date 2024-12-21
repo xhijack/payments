@@ -141,12 +141,16 @@ def create_multiple_invoice(bulk_payment_request):
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Overpaid')
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'overpaid_amount', bpr.amount - payment_allocation)
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'payment_allocation', payment_allocation)
-            frappe.db.commit()
 
     except frappe.ValidationError as e:
         frappe.log_error(f"Paid Error: {str(e)}", "Bulk Payment Request Error")
 
-    return "success"                            
+    # Set Block Payment Request to Paid
+    frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Paid')
+    frappe.db.commit()
+    # end of Function
+
+    return "success"                   
 
 
 @frappe.whitelist(allow_guest=True)
@@ -190,7 +194,7 @@ def accept_payment_multi_invoice(**data):
             # Update Xendit Payment Log
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "status", data['status'])
             frappe.db.set_value("Xendit Payment Log", payment_log[0].name, "callback_payload", frappe.as_json(data))
-            frappe.db.set_value('Bulk Payment Request', xpl.document, 'status', 'Paid')
+            frappe.db.set_value('Bulk Payment Request', xpl.document, 'status', 'Pending')
 
             frappe.db.commit()
 
