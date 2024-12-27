@@ -120,7 +120,7 @@ scheduler_events = {
         "* * * * *": [
             "frappe.email.queue.flush"
         ],
-         "0 17 * * *": [
+         "0 0 * * *": [
             "payments.utility.bulk_payment_expire"
         ]
     }

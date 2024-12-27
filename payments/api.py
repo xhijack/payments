@@ -137,16 +137,17 @@ def create_multiple_invoice(bulk_payment_request):
             frappe.log_error(f"Paid Error: {str(e)}", "Payment Entry Error")
     
     try:
-        if payment_allocation != bpr.amount:
+        if payment_allocation != bpr.amount and bpr.status != 'Paid':
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Overpaid')
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'overpaid_amount', bpr.amount - payment_allocation)
             frappe.db.set_value('Bulk Payment Request', bpr.name, 'payment_allocation', payment_allocation)
-
+        else:
+            frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Paid')
+                                
     except frappe.ValidationError as e:
         frappe.log_error(f"Paid Error: {str(e)}", "Bulk Payment Request Error")
 
     # Set Block Payment Request to Paid
-    frappe.db.set_value('Bulk Payment Request', bpr.name, 'status', 'Paid')
     frappe.db.commit()
     # end of Function
 
